@@ -1,2 +1,2 @@
 # v-automatic
-kvm automatisation tool written in bash
+kvm automatiion tool written in bash
