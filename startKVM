@@ -1,0 +1,60 @@
+#!/bin/bash
+
+#check if the script is running as a root
+checkRoot(){
+	if [[ $EUID -ne 0 ]];then
+		echo "This script must be run as root" 1>&2
+                exit 1
+	fi
+}
+
+
+IP_CONFIG_FILE="conf/ip.conf"
+USER_CONFIG_FILE="conf/user.conf"
+
+
+echo "Choose one or more virtual machines to run:"
+
+listVirtualMachines(){
+    virsh list --all #list all available virtual machines
+}
+
+
+
+
+# read input virt name from user, use -a flag to make it an array
+read -ra INPUT_VIRT_NAMES
+
+
+# now iterate over an array  "${INPUT_VIRT_NAMES[@]}"
+startVirtualMachines(){
+	for VM in "${INPUT_VIRT_NAMES[@]}";do
+		virsh start "${VM}"
+	done    
+}
+
+
+#iterate trghou INPUT_VIRT_NAMES array and parse ip addres and user info from config files and connect via ssh
+startSSH(){
+        for VM in "${INPUT_VIRT_NAMES[@]}";do
+                IP_ADDR=$(cat ${IP_CONFIG_FILE[@]} | grep $VM | cut -d "=" -f2)
+                USER=$(cat ${USER_CONFIG_FILE[@]} | grep $VM | cut -d "=" -f2)
+                for IP in $VM;do
+			while true;do
+				if ping -c 1 ${IP_ADDR} &> /dev/null;then 	#check to see if vm's are booted
+					echo "Connected"
+					gnome-terminal -- bash -c "echo connecting to $VM; ssh ${USER}@${IP_ADDR}; exec bash"
+					break
+		       		else
+					echo "Waiting for a connection"
+		       		fi
+			done
+		done
+        done
+}
+
+
+checkRoot
+listVirtualMachines
+startVirtualMachines
+startSSH
