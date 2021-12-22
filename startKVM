@@ -54,7 +54,4 @@ startSSH(){
 }
 
 
-checkRoot
-listVirtualMachines
-startVirtualMachines
-startSSH
+
